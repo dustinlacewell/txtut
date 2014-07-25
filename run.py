@@ -30,12 +30,17 @@ def get_data(n):
     '''emulate network retreival of some data'''
     return make_pipe('head', '-c', str(n), '/dev/random')
 
+def count_words(d):
+    '''emulate sending data to remote service for processing'''
+    return make_pipe('wc', '-w', stdin=d)
+
 def result(output):
     '''take some data and print out how many words there are'''
-    print len(output.split())
+    print output.strip()
 
 # get some data
 (get_data(1024)
+    .addCallback(count_words)
     # then process the data
     .addCallback(result)
     # then stop the reactor
