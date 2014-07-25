@@ -29,13 +29,23 @@ def make_pipe(cmd, *args, **kwargs):
 def exceptional_pipe(*args, **kwargs):
     raise Exception('Whoopsie')
 
+def failing_pipe(*args, **kwargs):
+    d = defer.Deferred()
+
+    def fail():
+        d.errback(Exception('Hello?'))
+
+    reactor.callLater(2, fail)
+
+    return d
+
 def get_data(n):
     '''emulate network retreival of some data'''
     return make_pipe('head', '-c', str(n), '/dev/random')
 
 def count_words(d):
     '''emulate sending data to remote service for processing'''
-    return exceptional_pipe('wc', '-w', stdin=d)
+    return failing_pipe('wc', '-w', stdin=d)
 
 def save_result(c, filename):
     print "Writing result to file:", filename
@@ -43,15 +53,17 @@ def save_result(c, filename):
 
 @defer.inlineCallbacks
 def start():
-    try:
-        data = yield get_data(1024)
-        words = yield count_words(data)
-        yield save_result(words, '/tmp/result.txt')
-    except Exception as e:
-        print "Error!"
-        print repr(e)
+    data = yield get_data(1024)
+    words = yield count_words(data)
+    yield save_result(words, '/tmp/result.txt')
     reactor.stop()
 
-start()
+def failsafe(failure):
+    print "Failure!"
+    print failure
+    reactor.stop()
+
+d = start()
+d.addErrback(failsafe)
 
 reactor.run()
