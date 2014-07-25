@@ -38,13 +38,11 @@ def save_result(c, filename):
     print "Writing result to file:", filename
     return make_pipe('tee', filename, stdin=c.strip())
 
-# get some data
-(get_data(1024)
-    # then process the data
-    .addCallback(count_words)
-    # then save the data
-    .addCallback(save_result, '/tmp/result.txt')
-    # then stop the reactor
-    .addCallback(lambda _: reactor.stop()))
+@defer.inlineCallbacks
+def start():
+    data = yield get_data(1024)
+    yield save_result(data, '/tmp/result.txt')
+    reactor.stop()
 
+start()
 reactor.run()
