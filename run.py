@@ -34,15 +34,16 @@ def count_words(d):
     '''emulate sending data to remote service for processing'''
     return make_pipe('wc', '-w', stdin=d)
 
-def result(output):
-    '''take some data and print out how many words there are'''
-    print output.strip()
+def save_result(c, filename):
+    print "Writing result to file:", filename
+    return make_pipe('tee', filename, stdin=c.strip())
 
 # get some data
 (get_data(1024)
-    .addCallback(count_words)
     # then process the data
-    .addCallback(result)
+    .addCallback(count_words)
+    # then save the data
+    .addCallback(save_result, '/tmp/result.txt')
     # then stop the reactor
     .addCallback(lambda _: reactor.stop()))
 
