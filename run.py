@@ -45,7 +45,7 @@ def get_data(n):
 
 def count_words(d):
     '''emulate sending data to remote service for processing'''
-    return failing_pipe('wc', '-w', stdin=d)
+    return exceptional_pipe('wc', '-w', stdin=d)
 
 def save_result(c, filename):
     print "Writing result to file:", filename
